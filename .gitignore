@@ -6,13 +6,35 @@
 # Python
 __pycache__/
 *.py[cod]
-backend/venv/
+backend/.venv/
 *.egg-info/
-.venv
 
-# Node
+# Node / Expo
 node_modules/
-app/.expo/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# Native builds
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+/ios
+/android
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# TypeScript
+*.tsbuildinfo
 
 # IDE
 .vscode/
@@ -20,4 +42,8 @@ app/.expo/
 
 # OS
 .DS_Store
+*.pem
 Thumbs.db
+
+# Builds
+build/
