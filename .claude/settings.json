@@ -1,0 +1,60 @@
+{
+  "model": "claude-sonnet-4.7",
+  "thinkingMode": "auto",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(python:*)",
+      "Bash(pip:*)",
+      "Bash(git:*)",
+      "Bash(supabase:*)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Edit(.env*)",
+      "Write(.env*)",
+      "Read(**/secrets/**)",
+      "Bash(cat .env*)",
+      "Bash(echo $*KEY*)",
+      "Bash(echo $*SECRET*)",
+      "Bash(echo $*TOKEN*)",
+      "Bash(rm -rf *)",
+      "Bash(docker:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write(*.py)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd backend && python -m black \"$CLAUDE_FILE_PATH\" && python -m ruff check --fix \"$CLAUDE_FILE_PATH\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write(*.tsx)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd app && npx prettier --write \"$CLAUDE_FILE_PATH\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write(*.ts)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd app && npx prettier --write \"$CLAUDE_FILE_PATH\""
+          }
+        ]
+      }
+    ]
+  }
+}
