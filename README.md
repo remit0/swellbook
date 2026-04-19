@@ -69,6 +69,11 @@ Voice memo → Whisper (transcription) → Claude (extraction) → Stormglass (a
 Current forecast (all spots) → Historical session matching (SQL) → Claude (cross-spot reasoning) → Ranked recommendation
 ```
 
+
+## Architecture
+
+![SwellBook Architecture](docs/architecture.svg)
+
 ## Setup
 
 ### Prerequisites
