@@ -1,20 +1,22 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function App() {
+  const [status, setStatus] = useState('checking...');
+  console.log('API URL:', process.env.EXPO_PUBLIC_API_URL);
+  useEffect(() => {
+    fetch(`${API_URL}/health`)
+      .then(res => res.json())
+      .then(data => setStatus(data.status))
+      .catch(err => setStatus(`error: ${err.message}`));
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>SwellBook</Text>
+      <Text>Backend: {status}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
