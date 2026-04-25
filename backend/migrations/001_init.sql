@@ -36,7 +36,7 @@ CREATE TABLE forecasts (
     UNIQUE (spot_id, timestamp)
 );
 
--- RLS
+-- RLS: sessions are user-scoped; spots and forecasts are intentionally public read-only.
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users see own sessions" ON sessions
     FOR ALL USING (auth.uid() = user_id);

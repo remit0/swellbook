@@ -1,15 +1,16 @@
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+from pydantic_settings import BaseSettings
 
 
-class Settings:
-    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
-    SUPABASE_API_KEY: str = os.getenv("SUPABASE_API_KEY", "")
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
-    STORMGLASS_API_KEY: str = os.getenv("STORMGLASS_API_KEY", "")
+class Settings(BaseSettings):
+    SUPABASE_URL: str
+    # Service-role key — bypasses RLS. Must never be sent to the client.
+    SUPABASE_SERVICE_ROLE_KEY: str
+    OPENAI_API_KEY: str
+    ANTHROPIC_API_KEY: str
+    STORMGLASS_API_KEY: str
+
+    class Config:
+        env_file = ".env"
 
 
 settings = Settings()

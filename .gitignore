@@ -50,4 +50,6 @@ build/
 
 # Custom
 dev/
+scripts/_generate_access_token_debug.sh
 CLAUDE.local.md
+*.m4a
