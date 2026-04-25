@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  FlatList,
+  Keyboard,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { SessionForecast } from './session.types';
-import { patchSession } from './sessionApi';
+import { SessionForecast, SessionSpot } from './session.types';
+import { createSpot, getSpots, patchSession } from './sessionApi';
 
 type ConfirmNav = NativeStackNavigationProp<RootStackParamList, 'SessionConfirm'>;
 type ConfirmRoute = RouteProp<RootStackParamList, 'SessionConfirm'>;
@@ -62,6 +64,77 @@ function ForecastCard({ forecast }: { forecast: SessionForecast }) {
   );
 }
 
+interface SpotAutocompleteProps {
+  value: string;
+  spotId: string | null;
+  onChange: (name: string, id: string | null) => void;
+}
+
+function SpotAutocomplete({ value, spotId, onChange }: SpotAutocompleteProps) {
+  const [allSpots, setAllSpots] = useState<SessionSpot[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const inputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    getSpots().then(setAllSpots).catch(() => {});
+  }, []);
+
+  const suggestions = value.trim().length > 0
+    ? allSpots.filter((s) =>
+        s.name.toLowerCase().includes(value.toLowerCase()) &&
+        s.name.toLowerCase() !== value.toLowerCase()
+      )
+    : [];
+
+  function handleChangeText(text: string): void {
+    onChange(text, null);
+    setShowSuggestions(true);
+  }
+
+  function handleSelect(spot: SessionSpot): void {
+    onChange(spot.name, spot.id);
+    setShowSuggestions(false);
+    Keyboard.dismiss();
+  }
+
+  const isNew = value.trim().length > 0 && spotId === null &&
+    !allSpots.some((s) => s.name.toLowerCase() === value.toLowerCase());
+
+  return (
+    <View style={styles.autocompleteWrapper}>
+      <View style={styles.spotInputRow}>
+        <TextInput
+          ref={inputRef}
+          style={styles.spotInput}
+          value={value}
+          onChangeText={handleChangeText}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+          placeholder="Spot name"
+          autoCorrect={false}
+        />
+        {isNew && <Text style={styles.newBadge}>New</Text>}
+      </View>
+      {showSuggestions && suggestions.length > 0 && (
+        <FlatList
+          style={styles.suggestionList}
+          data={suggestions}
+          keyExtractor={(item) => item.id}
+          keyboardShouldPersistTaps="always"
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.suggestionItem}
+              onPress={() => handleSelect(item)}
+            >
+              <Text style={styles.suggestionText}>{item.name}</Text>
+            </TouchableOpacity>
+          )}
+        />
+      )}
+    </View>
+  );
+}
+
 export default function SessionConfirmScreen() {
   const navigation = useNavigation<ConfirmNav>();
   const route = useRoute<ConfirmRoute>();
@@ -73,14 +146,23 @@ export default function SessionConfirmScreen() {
       ? String(result.session.overall_rating)
       : '',
   });
+  const [spotName, setSpotName] = useState(result.spot?.name ?? '');
+  const [spotId, setSpotId] = useState<string | null>(result.spot?.id ?? null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const spotChanged = spotName !== (result.spot?.name ?? '') || spotId !== (result.spot?.id ?? null);
   const hasChanges =
+    spotChanged ||
     fields.notes !== (result.session.notes ?? '') ||
     fields.overall_rating !== (result.session.overall_rating !== null
       ? String(result.session.overall_rating)
       : '');
+
+  function handleSpotChange(name: string, id: string | null): void {
+    setSpotName(name);
+    setSpotId(id);
+  }
 
   async function handleSaveChanges(): Promise<void> {
     setIsSaving(true);
@@ -96,10 +178,22 @@ export default function SessionConfirmScreen() {
         }
         rating = parsed;
       }
-      await patchSession(result.session.id, {
+
+      const updates: Parameters<typeof patchSession>[1] = {
         notes: fields.notes || null,
         overall_rating: rating,
-      });
+      };
+
+      if (spotChanged) {
+        let resolvedSpotId = spotId;
+        if (resolvedSpotId === null && spotName.trim()) {
+          const created = await createSpot(spotName.trim());
+          resolvedSpotId = created.id;
+        }
+        if (resolvedSpotId) updates.spot_id = resolvedSpotId;
+      }
+
+      await patchSession(result.session.id, updates);
       navigation.reset({ index: 0, routes: [{ name: 'SessionList' }] });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -109,8 +203,8 @@ export default function SessionConfirmScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.spotName}>{result.spot?.name ?? 'Unknown spot'}</Text>
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <SpotAutocomplete value={spotName} spotId={spotId} onChange={handleSpotChange} />
       <Text style={styles.date}>{formatDate(result.session.date)}</Text>
 
       <Text style={styles.sectionTitle}>Notes</Text>
@@ -123,15 +217,19 @@ export default function SessionConfirmScreen() {
         numberOfLines={4}
       />
 
-      <Text style={styles.sectionTitle}>Overall Rating (1–5)</Text>
-      <TextInput
-        style={styles.ratingInput}
-        value={fields.overall_rating}
-        onChangeText={(text) => setFields((prev) => ({ ...prev, overall_rating: text }))}
-        placeholder="e.g. 4"
-        keyboardType="numeric"
-        maxLength={1}
-      />
+      <Text style={styles.sectionTitle}>Overall Rating</Text>
+      <View style={styles.starsRow}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <TouchableOpacity
+            key={star}
+            onPress={() => setFields((prev) => ({ ...prev, overall_rating: String(star) }))}
+          >
+            <Text style={[styles.star, Number(fields.overall_rating) >= star && styles.starFilled]}>
+              ★
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {result.forecast && <ForecastCard forecast={result.forecast} />}
 
@@ -152,10 +250,53 @@ export default function SessionConfirmScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 24, paddingBottom: 48 },
-  spotName: { fontSize: 26, fontWeight: '700', marginBottom: 4 },
-  date: { fontSize: 14, color: '#666', marginBottom: 24 },
+  container: { padding: 24, paddingTop: 64, paddingBottom: 48 },
+  date: { fontSize: 14, color: '#666', marginBottom: 24, marginTop: 4 },
   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8, marginTop: 16 },
+  autocompleteWrapper: { zIndex: 10 },
+  spotInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  spotInput: {
+    flex: 1,
+    fontSize: 26,
+    fontWeight: '700',
+    paddingVertical: 4,
+    paddingHorizontal: 0,
+    color: '#1a1a1a',
+  },
+  newBadge: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#0077cc',
+    backgroundColor: '#e8f2fb',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  suggestionList: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    marginTop: 4,
+    maxHeight: 180,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  suggestionItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#eee',
+  },
+  suggestionText: { fontSize: 16, color: '#1a1a1a' },
   notesInput: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -165,14 +306,9 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: 'top',
   },
-  ratingInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 15,
-    width: 80,
-  },
+  starsRow: { flexDirection: 'row', gap: 8 },
+  star: { fontSize: 32, color: '#ccc' },
+  starFilled: { color: '#f5a623' },
   forecastCard: {
     backgroundColor: '#f0f6ff',
     borderRadius: 12,

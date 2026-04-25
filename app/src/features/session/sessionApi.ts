@@ -1,5 +1,5 @@
 import { supabase } from '../../config/supabase';
-import { CreateSessionResult, SessionListItem, SessionRecord } from './session.types';
+import { CreateSessionResult, SessionListItem, SessionRecord, SessionSpot } from './session.types';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
 
@@ -70,6 +70,29 @@ export async function uploadSession(
   if (!response.ok || json.error) throw new Error(json.error ?? 'Upload failed');
   if (!isCreateSessionResult(json.data)) throw new Error('Unexpected response shape from server');
   return json.data;
+}
+
+export async function getSpots(): Promise<SessionSpot[]> {
+  const authHeader = await getAuthHeader();
+  const response = await fetch(`${API_URL}/api/spots/`, {
+    headers: { Authorization: authHeader },
+  });
+  const json = await parseJsonResponse(response);
+  if (!response.ok || json.error) throw new Error(json.error ?? 'Failed to load spots');
+  if (!Array.isArray(json.data)) throw new Error('Unexpected response shape from server');
+  return json.data as SessionSpot[];
+}
+
+export async function createSpot(name: string): Promise<SessionSpot> {
+  const authHeader = await getAuthHeader();
+  const response = await fetch(`${API_URL}/api/spots/`, {
+    method: 'POST',
+    headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  const json = await parseJsonResponse(response);
+  if (!response.ok || json.error) throw new Error(json.error ?? 'Failed to create spot');
+  return json.data as SessionSpot;
 }
 
 export async function patchSession(

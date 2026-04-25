@@ -81,7 +81,8 @@ swellbook/
 │   │   │   └── forecast.py           # Swell/weather forecast schemas
 │   │   ├── routes/                   # Thin route handlers (delegate to services)
 │   │   │   ├── __init__.py
-│   │   │   └── sessions.py           # POST /sessions, GET /sessions, GET /sessions/{id}
+│   │   │   ├── sessions.py           # POST /sessions, GET /sessions, GET /sessions/{id}
+│   │   │   └── spots.py              # GET /spots, POST /spots
 │   │   └── services/                 # Business logic — all heavy lifting lives here
 │   │       ├── __init__.py
 │   │       ├── session_service.py    # CRUD for sessions; similarity queries via SQL ranges
@@ -89,7 +90,8 @@ swellbook/
 │   │       ├── whisper_service.py    # Send audio to OpenAI Whisper, return transcript
 │   │       └── claude_service.py     # Send transcript to Claude, extract structured data
 │   ├── migrations/                   # SQL migration files (run manually or via CI)
-│   │   └── 001_init.sql              # Creates sessions, spots, forecasts, perception_deltas
+│   │   ├── 001_init.sql              # Creates sessions, spots, forecasts, perception_deltas
+│   │   └── 002_nullable_spot_coords.sql  # Makes spots.lat and spots.lng nullable
 │   └── tests/
 │       └── __init__.py               # Test package (pytest)
 │

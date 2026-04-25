@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routes import sessions
+from app.routes import sessions, spots
 
 app = FastAPI(
     title="SwellBook API",
@@ -9,6 +9,7 @@ app = FastAPI(
 )
 
 app.include_router(sessions.router, prefix="/api/sessions", tags=["sessions"])
+app.include_router(spots.router, prefix="/api/spots", tags=["spots"])
 
 
 @app.get("/health")
