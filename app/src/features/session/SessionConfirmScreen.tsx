@@ -75,7 +75,6 @@ export default function SessionConfirmScreen() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   const hasChanges =
     fields.notes !== (result.session.notes ?? '') ||
@@ -101,16 +100,12 @@ export default function SessionConfirmScreen() {
         notes: fields.notes || null,
         overall_rating: rating,
       });
-      setSaved(true);
+      navigation.reset({ index: 0, routes: [{ name: 'SessionList' }] });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setIsSaving(false);
     }
-  }
-
-  function handleDone(): void {
-    navigation.navigate('Recorder');
   }
 
   return (
@@ -141,7 +136,6 @@ export default function SessionConfirmScreen() {
       {result.forecast && <ForecastCard forecast={result.forecast} />}
 
       {error && <Text style={styles.error}>{error}</Text>}
-      {saved && <Text style={styles.success}>Changes saved.</Text>}
 
       <TouchableOpacity
         style={[styles.saveButton, (!hasChanges || isSaving) && styles.saveButtonDisabled]}
@@ -153,9 +147,6 @@ export default function SessionConfirmScreen() {
           : <Text style={styles.saveButtonText}>Save Changes</Text>}
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.doneButton} onPress={handleDone}>
-        <Text style={styles.doneButtonText}>Done</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -198,7 +189,6 @@ const styles = StyleSheet.create({
   forecastLabel: { fontSize: 14, color: '#444' },
   forecastValue: { fontSize: 14, fontWeight: '600', color: '#1a1a1a' },
   error: { color: '#cc0000', marginTop: 16 },
-  success: { color: '#008800', marginTop: 16 },
   saveButton: {
     backgroundColor: '#0077cc',
     paddingVertical: 14,
@@ -208,11 +198,4 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: { backgroundColor: '#99c2e8' },
   saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  doneButton: {
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  doneButtonText: { color: '#0077cc', fontSize: 16 },
 });

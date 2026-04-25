@@ -54,7 +54,7 @@ export default function AppNavigator() {
         <Stack.Screen
           name="SessionConfirm"
           component={SessionConfirmScreen}
-          options={{ title: 'Session Details' }}
+          options={{ title: 'Session Details', headerBackVisible: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
