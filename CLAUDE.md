@@ -21,3 +21,10 @@
 ## Database
 - See backend/app/models/ for Pydantic schemas
 - Supabase tables: sessions, spots, forecasts, perception_deltas
+
+## Environment Configuration
+- **Frontend Root:** `./app`
+- **Backend Root:** `./backend`
+- **Virtual Environment:** `./backend/.venv`
+- **Activation:** Always use `source backend/.venv/bin/activate` before running backend commands.
+- **Python Path:** When running scripts, ensure the working directory is `./backend` or that `backend` is added to `PYTHONPATH`.
