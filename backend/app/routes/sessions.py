@@ -52,6 +52,22 @@ class ApiResponse(BaseModel):
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
+@router.get("/", response_model=ApiResponse)
+async def list_sessions_route(
+    current_user: Annotated[dict, Depends(get_current_user)],
+) -> ApiResponse:
+    """Return all sessions for the authenticated user, ordered by date descending.
+
+    Args:
+        current_user: Injected authenticated user dict.
+
+    Returns:
+        Standard API response: {data: [{session + spot}, ...], error: None}
+    """
+    sessions = await session_service.list_sessions(user_id=current_user["id"])
+    return ApiResponse(data=sessions)
+
+
 @router.post("/create", status_code=status.HTTP_201_CREATED, response_model=ApiResponse)
 async def create_session_route(
     audio: UploadFile,

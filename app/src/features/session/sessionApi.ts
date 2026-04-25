@@ -1,5 +1,5 @@
 import { supabase } from '../../config/supabase';
-import { CreateSessionResult, SessionRecord } from './session.types';
+import { CreateSessionResult, SessionListItem, SessionRecord } from './session.types';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
 
@@ -30,6 +30,18 @@ function isSessionRecord(data: unknown): data is SessionRecord {
     typeof data === 'object' && data !== null &&
     'id' in data && 'user_id' in data && 'spot_id' in data
   );
+}
+
+export async function getSessions(): Promise<SessionListItem[]> {
+  const authHeader = await getAuthHeader();
+  const response = await fetch(`${API_URL}/api/sessions/`, {
+    headers: { Authorization: authHeader },
+  });
+
+  const json = await parseJsonResponse(response);
+  if (!response.ok || json.error) throw new Error(json.error ?? 'Failed to load sessions');
+  if (!Array.isArray(json.data)) throw new Error('Unexpected response shape from server');
+  return json.data as SessionListItem[];
 }
 
 export async function uploadSession(

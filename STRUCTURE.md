@@ -51,8 +51,9 @@ swellbook/
 │       │   │   ├── RecorderScreen.tsx   # Main recording UI (mic button, waveform)
 │       │   │   └── recorder.types.ts    # Types: RecordingState, AudioBlob, etc.
 │       │   └── session/              # Session management feature
+│       │       ├── SessionListScreen.tsx      # Home screen — list of past sessions (most recent first)
 │       │       ├── SessionConfirmScreen.tsx   # Review and confirm a recorded session
-│       │       ├── session.types.ts           # Types: Session, Spot, Forecast, etc.
+│       │       ├── session.types.ts           # Types: Session, Spot, Forecast, SessionListItem, etc.
 │       │       └── sessionApi.ts              # API calls to backend /sessions routes
 │       └── navigation/
 │           └── AppNavigator.tsx      # Stack/tab navigator — defines all routes

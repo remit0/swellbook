@@ -27,6 +27,10 @@ export interface SessionRecord {
   created_at: string;
 }
 
+export interface SessionListItem extends SessionRecord {
+  spot: SessionSpot | null;
+}
+
 export interface CreateSessionResult {
   session: SessionRecord;
   spot: SessionSpot | null;

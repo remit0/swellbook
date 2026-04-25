@@ -219,6 +219,39 @@ async def create_session(
     }
 
 
+async def list_sessions(user_id: str) -> list[dict]:
+    """Return all sessions for a user, ordered by date descending, with spot info.
+
+    Args:
+        user_id: Authenticated user's UUID string.
+
+    Returns:
+        List of session dicts, each with a nested 'spot' key (or None).
+    """
+    supabase = _get_supabase_client()
+
+    try:
+        result = await _exec(
+            supabase.table("sessions")
+            .select("*, spots(*)")
+            .eq("user_id", user_id)
+            .order("date", desc=True)
+        )
+    except PostgrestAPIError as exc:
+        logger.error("Session list query failed: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve sessions",
+        ) from exc
+
+    sessions = []
+    for row in result.data:
+        spot = row.pop("spots", None)
+        sessions.append({**row, "spot": spot})
+
+    return sessions
+
+
 async def update_session(session_id: str, user_id: str, updates: dict) -> dict:
     """Update allowed fields on an existing session.
 

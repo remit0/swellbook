@@ -5,10 +5,12 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from '../config/supabase';
 import RecorderScreen from '../features/recorder/RecorderScreen';
 import SessionConfirmScreen from '../features/session/SessionConfirmScreen';
+import SessionListScreen from '../features/session/SessionListScreen';
 import LoginScreen from '../features/auth/LoginScreen';
 import { CreateSessionResult } from '../features/session/session.types';
 
 export type RootStackParamList = {
+  SessionList: undefined;
   Recorder: undefined;
   SessionConfirm: { result: CreateSessionResult };
 };
@@ -38,11 +40,16 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Recorder">
+      <Stack.Navigator initialRouteName="SessionList">
+        <Stack.Screen
+          name="SessionList"
+          component={SessionListScreen}
+          options={{ title: 'SwellBook' }}
+        />
         <Stack.Screen
           name="Recorder"
           component={RecorderScreen}
-          options={{ title: 'SwellBook' }}
+          options={{ title: 'Nouvelle session' }}
         />
         <Stack.Screen
           name="SessionConfirm"
