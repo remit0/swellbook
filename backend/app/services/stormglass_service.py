@@ -11,7 +11,7 @@ _STORMGLASS_URL = "https://api.stormglass.io/v2/weather/point"
 _PARAMS = (
     "waveHeight,wavePeriod,waveDirection,"
     "windSpeed,windDirection,"
-    "swellHeight,swellPeriod,swellDirection,"
+    "swellHeight,swellPeriod,swellDirection"
 )
 
 _FIELD_MAP = {

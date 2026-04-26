@@ -260,6 +260,8 @@ export default function SessionDetailsScreen() {
         </View>
       )}
 
+      {result.forecast && <ForecastCard forecast={result.forecast} />}
+
       <Text style={styles.sectionTitle}>Notes</Text>
       <TextInput
         style={styles.notesInput}
@@ -283,8 +285,6 @@ export default function SessionDetailsScreen() {
           </TouchableOpacity>
         ))}
       </View>
-
-      {result.forecast && <ForecastCard forecast={result.forecast} />}
 
       {error && <Text style={styles.error}>{error}</Text>}
 

@@ -92,7 +92,8 @@ swellbook/
 │   ├── migrations/                   # SQL migration files (run manually or via CI)
 │   │   ├── 001_init.sql              # Creates sessions, spots, forecasts, perception_deltas
 │   │   ├── 002_nullable_spot_coords.sql  # Makes spots.lat and spots.lng nullable
-│   │   └── 003_session_lat_lng.sql   # Adds lat/lng columns to sessions (GPS at record time)
+│   │   ├── 003_session_lat_lng.sql   # Adds lat/lng columns to sessions (GPS at record time)
+│   │   └── 004_session_forecast_id.sql  # Adds forecast_id FK to sessions (links to forecasts table)
 │   └── tests/
 │       └── __init__.py               # Test package (pytest)
 │

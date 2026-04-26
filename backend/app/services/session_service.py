@@ -182,10 +182,12 @@ async def create_session(
         session_date = datetime.now(timezone.utc)
 
     forecast_row: dict | None = None
-    if spot:
-        forecast_data = await fetch_forecast(spot["lat"], spot["lng"], session_date)
+    fetch_lat = spot["lat"] if spot else user_lat
+    fetch_lng = spot["lng"] if spot else user_lng
+    if fetch_lat is not None and fetch_lng is not None:
+        forecast_data = await fetch_forecast(fetch_lat, fetch_lng, session_date)
         if forecast_data:
-            forecast_row = await _upsert_forecast(supabase, spot["id"], session_date, forecast_data)
+            forecast_row = forecast_data  # display only — not persisted yet
 
     session_payload = {
         "user_id": user_id,
@@ -237,7 +239,14 @@ async def list_sessions(user_id: str) -> list[dict]:
     try:
         result = await _exec(
             supabase.table("sessions")
-            .select("*, spots(*)")
+            .select(
+                "*, spots(*), "
+                "forecast:forecasts!forecast_id("
+                "wave_height, wave_period, wave_direction, "
+                "wind_speed, wind_direction, "
+                "swell_height, swell_period, swell_direction"
+                ")"
+            )
             .eq("user_id", user_id)
             .order("date", desc=True)
         )
@@ -251,7 +260,8 @@ async def list_sessions(user_id: str) -> list[dict]:
     sessions = []
     for row in result.data:
         spot = row.pop("spots", None)
-        sessions.append({**row, "spot": spot})
+        forecast = row.pop("forecast", None)
+        sessions.append({**row, "spot": spot, "forecast": forecast})
 
     return sessions
 
@@ -317,7 +327,11 @@ async def update_session(session_id: str, user_id: str, updates: dict) -> dict:
     supabase = _get_supabase_client()
 
     try:
-        existing = await _exec(supabase.table("sessions").select("id,user_id").eq("id", session_id))
+        existing = await _exec(
+            supabase.table("sessions")
+            .select("id, user_id, date, spot_id, forecast_id")
+            .eq("id", session_id)
+        )
     except PostgrestAPIError as exc:
         logger.error("Session ownership check failed: %s", exc)
         raise HTTPException(
@@ -328,7 +342,9 @@ async def update_session(session_id: str, user_id: str, updates: dict) -> dict:
     if not existing.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
-    if existing.data[0]["user_id"] != user_id:
+    existing_row = existing.data[0]
+
+    if existing_row["user_id"] != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this session")
 
     if not updates:
@@ -341,6 +357,27 @@ async def update_session(session_id: str, user_id: str, updates: dict) -> dict:
                 detail="Failed to retrieve session",
             ) from exc
         return current.data[0]
+
+    effective_spot_id = updates.get("spot_id") or existing_row.get("spot_id")
+    if effective_spot_id and not existing_row.get("forecast_id"):
+        try:
+            spot_result = await _exec(
+                supabase.table("spots").select("lat, lng").eq("id", effective_spot_id)
+            )
+            spot_row = spot_result.data[0] if spot_result.data else None
+            if spot_row and spot_row.get("lat") is not None and spot_row.get("lng") is not None:
+                session_date = datetime.fromisoformat(existing_row["date"])
+                if session_date.tzinfo is None:
+                    session_date = session_date.replace(tzinfo=timezone.utc)
+                forecast_data = await fetch_forecast(spot_row["lat"], spot_row["lng"], session_date)
+                if forecast_data:
+                    upserted = await _upsert_forecast(
+                        supabase, effective_spot_id, session_date, forecast_data
+                    )
+                    if upserted:
+                        updates["forecast_id"] = upserted["id"]
+        except (PostgrestAPIError, KeyError, ValueError) as exc:
+            logger.warning("Forecast save during session update failed (non-fatal): %s", exc)
 
     try:
         result = await _exec(supabase.table("sessions").update(updates).eq("id", session_id))

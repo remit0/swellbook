@@ -15,4 +15,5 @@ class Session(BaseModel):
     overall_rating: int | None  # 1-5
     lat: float | None
     lng: float | None
+    forecast_id: UUID | None
     created_at: datetime

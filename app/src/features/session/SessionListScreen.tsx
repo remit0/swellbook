@@ -350,7 +350,7 @@ export default function SessionListScreen({ navigation }: Props) {
           <SessionCard
             item={item}
             onPress={() => navigation.navigate('SessionDetails', {
-              result: { session: item, spot: item.spot, forecast: null } as CreateSessionResult,
+              result: { session: item, spot: item.spot, forecast: item.forecast } as CreateSessionResult,
             })}
           />
         )}

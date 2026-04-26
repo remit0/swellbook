@@ -26,11 +26,13 @@ export interface SessionRecord {
   overall_rating: number | null;
   lat: number | null;
   lng: number | null;
+  forecast_id: string | null;
   created_at: string;
 }
 
 export interface SessionListItem extends SessionRecord {
   spot: SessionSpot | null;
+  forecast: SessionForecast | null;
 }
 
 export interface CreateSessionResult {
