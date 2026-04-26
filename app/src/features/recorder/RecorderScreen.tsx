@@ -218,7 +218,7 @@ export default function RecorderScreen() {
     setError(null);
     try {
       const result = await uploadSession(recordingState.uri, location?.lat, location?.lng);
-      navigation.navigate('SessionConfirm', { result });
+      navigation.navigate('SessionDetails', { result });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
       setPhase('review');

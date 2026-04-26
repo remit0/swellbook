@@ -16,8 +16,8 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import { SessionForecast, SessionSpot } from './session.types';
 import { createSpot, deleteSession, getSpots, patchSession } from './sessionApi';
 
-type ConfirmNav = NativeStackNavigationProp<RootStackParamList, 'SessionConfirm'>;
-type ConfirmRoute = RouteProp<RootStackParamList, 'SessionConfirm'>;
+type DetailsNav = NativeStackNavigationProp<RootStackParamList, 'SessionDetails'>;
+type DetailsRoute = RouteProp<RootStackParamList, 'SessionDetails'>;
 
 interface EditableFields {
   notes: string;
@@ -59,7 +59,6 @@ function ForecastCard({ forecast }: { forecast: SessionForecast }) {
       <ForecastRow label="Wind speed" value={forecast.wind_speed} unit="kn" />
       <ForecastRow label="Swell direction" value={forecast.swell_direction} unit="°" />
       <ForecastRow label="Swell height" value={forecast.swell_height} unit="m" />
-      <ForecastRow label="Water temp" value={forecast.water_temperature} unit="°C" />
     </View>
   );
 }
@@ -135,9 +134,9 @@ function SpotAutocomplete({ value, spotId, onChange }: SpotAutocompleteProps) {
   );
 }
 
-export default function SessionConfirmScreen() {
-  const navigation = useNavigation<ConfirmNav>();
-  const route = useRoute<ConfirmRoute>();
+export default function SessionDetailsScreen() {
+  const navigation = useNavigation<DetailsNav>();
+  const route = useRoute<DetailsRoute>();
   const { result } = route.params;
 
   const [fields, setFields] = useState<EditableFields>({
@@ -207,7 +206,7 @@ export default function SessionConfirmScreen() {
       }
 
       await patchSession(result.session.id, updates);
-      navigation.reset({ index: 0, routes: [{ name: 'SessionList' }] });
+      navigation.goBack();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
     } finally {

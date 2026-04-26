@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Svg, Path } from 'react-native-svg';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import { useAudioRecorder, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
 import * as FileSystem from 'expo-file-system';
@@ -19,7 +20,7 @@ import Slider from '@react-native-community/slider';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { getSessions } from './sessionApi';
 import { uploadSession } from './sessionApi';
-import { SessionListItem } from './session.types';
+import { SessionListItem, CreateSessionResult } from './session.types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SessionList'>;
 type Phase = 'idle' | 'recording' | 'review' | 'uploading';
@@ -49,15 +50,23 @@ function RatingDots({ rating }: { rating: number | null }) {
   );
 }
 
-function SessionCard({ item }: { item: SessionListItem }) {
+interface SessionCardProps {
+  item: SessionListItem;
+  onPress?: () => void;
+}
+
+function SessionCard({ item, onPress }: SessionCardProps) {
   return (
-    <View style={styles.card}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.card, pressed && { opacity: 0.75 }]}
+    >
       <View style={styles.cardLeft}>
         <Text style={styles.cardDate}>{formatDate(item.date)}</Text>
         <Text style={styles.cardSpot}>{item.spot?.name ?? 'Spot inconnu'}</Text>
       </View>
       <RatingDots rating={item.overall_rating} />
-    </View>
+    </Pressable>
   );
 }
 
@@ -92,12 +101,16 @@ export default function SessionListScreen({ navigation }: Props) {
     Location.requestForegroundPermissionsAsync();
   }, []);
 
-  useEffect(() => {
-    getSessions()
-      .then(setSessions)
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      setError(null);
+      getSessions()
+        .then(setSessions)
+        .catch((e: Error) => setError(e.message))
+        .finally(() => setLoading(false));
+    }, [])
+  );
 
   useEffect(() => {
     return () => {
@@ -288,7 +301,7 @@ export default function SessionListScreen({ navigation }: Props) {
     setRecordError(null);
     try {
       const result = await uploadSession(recordingUri, location?.lat, location?.lng);
-      navigation.navigate('SessionConfirm', { result });
+      navigation.navigate('SessionDetails', { result });
     } catch (err) {
       setRecordError(err instanceof Error ? err.message : 'Upload failed');
       setPhase('review');
@@ -333,7 +346,14 @@ export default function SessionListScreen({ navigation }: Props) {
       <FlatList
         data={sessions}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <SessionCard item={item} />}
+        renderItem={({ item }) => (
+          <SessionCard
+            item={item}
+            onPress={() => navigation.navigate('SessionDetails', {
+              result: { session: item, spot: item.spot, forecast: null } as CreateSessionResult,
+            })}
+          />
+        )}
         contentContainerStyle={sessions.length === 0 ? styles.centered : styles.list}
         ListEmptyComponent={<Text style={styles.emptyText}>Aucune session enregistrée.</Text>}
       />

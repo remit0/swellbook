@@ -52,7 +52,7 @@ swellbook/
 │       │   │   └── recorder.types.ts    # Types: RecordingState, AudioBlob, etc.
 │       │   └── session/              # Session management feature
 │       │       ├── SessionListScreen.tsx      # Home screen — list of past sessions (most recent first)
-│       │       ├── SessionConfirmScreen.tsx   # Review and confirm a recorded session
+│       │       ├── SessionDetailsScreen.tsx   # View/edit a session (new or existing)
 │       │       ├── session.types.ts           # Types: Session, Spot, Forecast, SessionListItem, etc.
 │       │       └── sessionApi.ts              # API calls to backend /sessions routes
 │       └── navigation/

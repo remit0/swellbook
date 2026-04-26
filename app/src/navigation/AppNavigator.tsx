@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../config/supabase';
 import RecorderScreen from '../features/recorder/RecorderScreen';
-import SessionConfirmScreen from '../features/session/SessionConfirmScreen';
+import SessionDetailsScreen from '../features/session/SessionDetailsScreen';
 import SessionListScreen from '../features/session/SessionListScreen';
 import LoginScreen from '../features/auth/LoginScreen';
 import { CreateSessionResult } from '../features/session/session.types';
@@ -12,7 +12,7 @@ import { CreateSessionResult } from '../features/session/session.types';
 export type RootStackParamList = {
   SessionList: undefined;
   Recorder: undefined;
-  SessionConfirm: { result: CreateSessionResult };
+  SessionDetails: { result: CreateSessionResult };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -52,8 +52,8 @@ export default function AppNavigator() {
           options={{ title: 'Nouvelle session' }}
         />
         <Stack.Screen
-          name="SessionConfirm"
-          component={SessionConfirmScreen}
+          name="SessionDetails"
+          component={SessionDetailsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
