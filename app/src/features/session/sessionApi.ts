@@ -95,6 +95,18 @@ export async function createSpot(name: string): Promise<SessionSpot> {
   return json.data as SessionSpot;
 }
 
+export async function deleteSession(sessionId: string): Promise<void> {
+  const authHeader = await getAuthHeader();
+  const response = await fetch(`${API_URL}/api/sessions/${sessionId}`, {
+    method: 'DELETE',
+    headers: { Authorization: authHeader },
+  });
+  if (!response.ok) {
+    const json = await parseJsonResponse(response);
+    throw new Error(json.error ?? 'Delete failed');
+  }
+}
+
 export async function patchSession(
   sessionId: string,
   updates: Partial<Pick<SessionRecord, 'notes' | 'overall_rating' | 'spot_id' | 'date'>>

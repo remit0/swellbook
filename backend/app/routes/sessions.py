@@ -108,6 +108,23 @@ async def create_session_route(
     return ApiResponse(data=result)
 
 
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_session_route(
+    session_id: str,
+    current_user: Annotated[dict, Depends(get_current_user)],
+) -> None:
+    """Delete a surf session owned by the authenticated user.
+
+    Args:
+        session_id: UUID of the session to delete.
+        current_user: Injected authenticated user dict.
+    """
+    await session_service.delete_session(
+        session_id=session_id,
+        user_id=current_user["id"],
+    )
+
+
 @router.patch("/{session_id}", response_model=ApiResponse)
 async def update_session_route(
     session_id: str,

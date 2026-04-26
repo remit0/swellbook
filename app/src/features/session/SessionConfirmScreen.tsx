@@ -14,7 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { SessionForecast, SessionSpot } from './session.types';
-import { createSpot, getSpots, patchSession } from './sessionApi';
+import { createSpot, deleteSession, getSpots, patchSession } from './sessionApi';
 
 type ConfirmNav = NativeStackNavigationProp<RootStackParamList, 'SessionConfirm'>;
 type ConfirmRoute = RouteProp<RootStackParamList, 'SessionConfirm'>;
@@ -149,6 +149,7 @@ export default function SessionConfirmScreen() {
   const [spotName, setSpotName] = useState(result.spot?.name ?? '');
   const [spotId, setSpotId] = useState<string | null>(result.spot?.id ?? null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const spotChanged = spotName !== (result.spot?.name ?? '') || spotId !== (result.spot?.id ?? null);
@@ -162,6 +163,18 @@ export default function SessionConfirmScreen() {
   function handleSpotChange(name: string, id: string | null): void {
     setSpotName(name);
     setSpotId(id);
+  }
+
+  async function handleDeleteSession(): Promise<void> {
+    setIsDeleting(true);
+    setError(null);
+    try {
+      await deleteSession(result.session.id);
+      navigation.reset({ index: 0, routes: [{ name: 'SessionList' }] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Delete failed');
+      setIsDeleting(false);
+    }
   }
 
   async function handleSaveChanges(): Promise<void> {
@@ -248,6 +261,16 @@ export default function SessionConfirmScreen() {
         {isSaving
           ? <ActivityIndicator color="#fff" />
           : <Text style={styles.saveButtonText}>Save Changes</Text>}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.deleteButton, isDeleting && styles.deleteButtonDisabled]}
+        onPress={handleDeleteSession}
+        disabled={isDeleting}
+      >
+        {isDeleting
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={styles.deleteButtonText}>Delete Session</Text>}
       </TouchableOpacity>
 
     </ScrollView>
@@ -340,4 +363,13 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: { backgroundColor: '#99c2e8' },
   saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  deleteButton: {
+    backgroundColor: '#cc2200',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  deleteButtonDisabled: { backgroundColor: '#e08070' },
+  deleteButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

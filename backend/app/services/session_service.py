@@ -256,6 +256,47 @@ async def list_sessions(user_id: str) -> list[dict]:
     return sessions
 
 
+async def delete_session(session_id: str, user_id: str) -> None:
+    """Delete a session owned by the given user.
+
+    Args:
+        session_id: UUID string of the session to delete.
+        user_id: Authenticated user's UUID string — must own the session.
+
+    Raises:
+        HTTPException 403: If the session does not belong to the user.
+        HTTPException 404: If the session does not exist.
+        HTTPException 500: If the delete fails.
+    """
+    supabase = _get_supabase_client()
+
+    try:
+        existing = await _exec(supabase.table("sessions").select("id,user_id").eq("id", session_id))
+    except PostgrestAPIError as exc:
+        logger.error("Session ownership check failed: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve session",
+        ) from exc
+
+    if not existing.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+
+    if existing.data[0]["user_id"] != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this session")
+
+    try:
+        await _exec(supabase.table("sessions").delete().eq("id", session_id))
+    except PostgrestAPIError as exc:
+        logger.error("Session delete failed: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete session",
+        ) from exc
+
+    logger.info("Session deleted: id=%s user=%s", session_id, user_id)
+
+
 async def update_session(session_id: str, user_id: str, updates: dict) -> dict:
     """Update allowed fields on an existing session.
 
