@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-  FlatList,
   Keyboard,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -115,20 +114,17 @@ function SpotAutocomplete({ value, spotId, onChange }: SpotAutocompleteProps) {
         {isNew && <Text style={styles.newBadge}>New</Text>}
       </View>
       {showSuggestions && suggestions.length > 0 && (
-        <FlatList
-          style={styles.suggestionList}
-          data={suggestions}
-          keyExtractor={(item) => item.id}
-          keyboardShouldPersistTaps="always"
-          renderItem={({ item }) => (
+        <View style={styles.suggestionList}>
+          {suggestions.map((item) => (
             <TouchableOpacity
+              key={item.id}
               style={styles.suggestionItem}
               onPress={() => handleSelect(item)}
             >
               <Text style={styles.suggestionText}>{item.name}</Text>
             </TouchableOpacity>
-          )}
-        />
+          ))}
+        </View>
       )}
     </View>
   );
