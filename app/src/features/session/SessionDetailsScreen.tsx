@@ -37,11 +37,12 @@ interface ForecastRowProps {
   label: string;
   value: number | null;
   unit: string;
+  isLast?: boolean;
 }
 
-function ForecastRow({ label, value, unit }: ForecastRowProps) {
+function ForecastRow({ label, value, unit, isLast }: ForecastRowProps) {
   return (
-    <View style={styles.forecastRow}>
+    <View style={[styles.forecastRow, isLast && styles.forecastRowLast]}>
       <Text style={styles.forecastLabel}>{label}</Text>
       <Text style={styles.forecastValue}>
         {value !== null ? `${value} ${unit}` : '—'}
@@ -52,13 +53,15 @@ function ForecastRow({ label, value, unit }: ForecastRowProps) {
 
 function ForecastCard({ forecast }: { forecast: SessionForecast }) {
   return (
-    <View style={styles.forecastCard}>
+    <>
       <Text style={styles.sectionTitle}>Forecast</Text>
-      <ForecastRow label="Wave height" value={forecast.wave_height} unit="m" />
-      <ForecastRow label="Wind speed" value={forecast.wind_speed} unit="kn" />
-      <ForecastRow label="Swell direction" value={forecast.swell_direction} unit="°" />
-      <ForecastRow label="Swell height" value={forecast.swell_height} unit="m" />
-    </View>
+      <View style={styles.forecastCard}>
+        <ForecastRow label="Wave height" value={forecast.wave_height} unit="m" />
+        <ForecastRow label="Wind speed" value={forecast.wind_speed} unit="kn" />
+        <ForecastRow label="Swell direction" value={forecast.swell_direction} unit="°" />
+        <ForecastRow label="Swell height" value={forecast.swell_height} unit="m" isLast />
+      </View>
+    </>
   );
 }
 
@@ -240,20 +243,22 @@ export default function SessionDetailsScreen() {
       <Text style={styles.date}>{formatDate(result.session.date)}</Text>
       {spotId !== null && (
         <View style={styles.coordsRow}>
+          <Text style={styles.coordLabel}>Lat</Text>
           <TextInput
             style={styles.coordInput}
             value={spotLat}
             onChangeText={setSpotLat}
-            placeholder="Latitude"
+            placeholder="—"
             keyboardType="decimal-pad"
             autoCorrect={false}
           />
-          <Text style={styles.coordSep}>,</Text>
+          <Text style={styles.coordSep}>·</Text>
+          <Text style={styles.coordLabel}>Lng</Text>
           <TextInput
             style={styles.coordInput}
             value={spotLng}
             onChangeText={setSpotLng}
-            placeholder="Longitude"
+            placeholder="—"
             keyboardType="decimal-pad"
             autoCorrect={false}
           />
@@ -317,9 +322,10 @@ const styles = StyleSheet.create({
   backButton: { alignSelf: 'flex-start', marginBottom: 16 },
   backButtonText: { fontSize: 16, color: '#0055ff', fontWeight: '500' },
   date: { fontSize: 14, color: '#666', marginBottom: 4, marginTop: 4 },
-  coordsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, gap: 4 },
-  coordInput: { fontSize: 12, color: '#999', fontVariant: ['tabular-nums'], flex: 1, paddingVertical: 2 },
-  coordSep: { fontSize: 12, color: '#999' },
+  coordsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, gap: 6 },
+  coordLabel: { fontSize: 11, color: '#aaa', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+  coordInput: { fontSize: 12, color: '#888', fontVariant: ['tabular-nums'], flex: 1, paddingVertical: 2 },
+  coordSep: { fontSize: 12, color: '#ccc', marginHorizontal: 2 },
   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8, marginTop: 16 },
   autocompleteWrapper: { zIndex: 10 },
   spotInputRow: {
@@ -371,27 +377,33 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 15,
-    minHeight: 200,
+    minHeight: 150,
     textAlignVertical: 'top',
   },
   starsRow: { flexDirection: 'row', gap: 8 },
   star: { fontSize: 32, color: '#ccc' },
   starFilled: { color: '#f5a623' },
   forecastCard: {
-    backgroundColor: '#f0f6ff',
-    borderRadius: 12,
+    backgroundColor: '#eef4ff',
+    borderRadius: 14,
     padding: 16,
-    marginTop: 24,
+    marginTop: 0,
+    marginBottom: 4,
   },
   forecastRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    alignItems: 'center',
+    paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccd8ee',
+    borderBottomColor: '#c8d8f0',
   },
-  forecastLabel: { fontSize: 14, color: '#444' },
-  forecastValue: { fontSize: 14, fontWeight: '600', color: '#1a1a1a' },
+  forecastRowLast: {
+    borderBottomWidth: 0,
+    paddingBottom: 0,
+  },
+  forecastLabel: { fontSize: 15, color: '#555' },
+  forecastValue: { fontSize: 15, fontWeight: '600', color: '#1a1a1a' },
   error: { color: '#cc0000', marginTop: 16 },
   saveButton: {
     backgroundColor: '#0055ff',
