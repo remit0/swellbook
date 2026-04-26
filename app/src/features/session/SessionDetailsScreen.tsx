@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   forecastValue: { fontSize: 14, fontWeight: '600', color: '#1a1a1a' },
   error: { color: '#cc0000', marginTop: 16 },
   saveButton: {
-    backgroundColor: '#0077cc',
+    backgroundColor: '#0055ff',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
