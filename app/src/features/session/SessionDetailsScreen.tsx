@@ -33,33 +33,49 @@ function formatDate(dateStr: string): string {
   });
 }
 
+const COMPASS_DIRS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+
+function degreesToCompass(deg: number): string {
+  return COMPASS_DIRS[Math.round(deg / 45) % 8];
+}
+
+function msToKmh(ms: number | null): number | null {
+  return ms !== null ? Math.round(ms * 3.6 * 10) / 10 : null;
+}
+
 interface ForecastRowProps {
   label: string;
-  value: number | null;
-  unit: string;
+  value: string | number | null;
+  unit?: string;
   isLast?: boolean;
 }
 
-function ForecastRow({ label, value, unit, isLast }: ForecastRowProps) {
+function ForecastRow({ label, value, unit = '', isLast }: ForecastRowProps) {
+  const display = value !== null
+    ? (unit ? `${value} ${unit}` : `${value}`)
+    : '—';
   return (
     <View style={[styles.forecastRow, isLast && styles.forecastRowLast]}>
       <Text style={styles.forecastLabel}>{label}</Text>
-      <Text style={styles.forecastValue}>
-        {value !== null ? `${value} ${unit}` : '—'}
-      </Text>
+      <Text style={styles.forecastValue}>{display}</Text>
     </View>
   );
 }
 
 function ForecastCard({ forecast }: { forecast: SessionForecast }) {
+  const windKmh = msToKmh(forecast.wind_speed);
+  const swellCompass = forecast.swell_direction !== null
+    ? degreesToCompass(forecast.swell_direction)
+    : null;
+
   return (
     <>
       <Text style={styles.sectionTitle}>Forecast</Text>
       <View style={styles.forecastCard}>
         <ForecastRow label="Wave height" value={forecast.wave_height} unit="m" />
-        <ForecastRow label="Wind speed" value={forecast.wind_speed} unit="kn" />
-        <ForecastRow label="Swell direction" value={forecast.swell_direction} unit="°" />
-        <ForecastRow label="Swell height" value={forecast.swell_height} unit="m" isLast />
+        <ForecastRow label="Wind speed" value={windKmh} unit="km/h" />
+        <ForecastRow label="Swell direction" value={swellCompass} />
+        <ForecastRow label="Swell period" value={forecast.swell_period} unit="s" isLast />
       </View>
     </>
   );
