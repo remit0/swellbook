@@ -300,6 +300,7 @@ export default function SessionListScreen({ navigation }: Props) {
     setRecordError(null);
     try {
       const result = await uploadSession(recordingUri, location?.lat, location?.lng);
+      setPhase('idle');
       navigation.navigate('SessionDetails', { result });
     } catch (err) {
       setRecordError(err instanceof Error ? err.message : 'Upload failed');
