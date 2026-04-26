@@ -15,7 +15,7 @@ from app.services.stormglass_service import fetch_forecast
 
 logger = logging.getLogger(__name__)
 
-_PROXIMITY_THRESHOLD_KM = 1.0
+_PROXIMITY_THRESHOLD_KM = 0.5
 _EARTH_RADIUS_KM = 6371.0
 
 

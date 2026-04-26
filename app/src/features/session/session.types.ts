@@ -1,8 +1,8 @@
 export interface SessionSpot {
   id: string;
   name: string;
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
 }
 
 export interface SessionForecast {

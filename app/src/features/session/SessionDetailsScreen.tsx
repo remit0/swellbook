@@ -13,7 +13,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { SessionForecast, SessionSpot } from './session.types';
-import { createSpot, deleteSession, getSpots, patchSession } from './sessionApi';
+import { createSpot, deleteSession, getSpots, patchSession, patchSpot } from './sessionApi';
 
 type DetailsNav = NativeStackNavigationProp<RootStackParamList, 'SessionDetails'>;
 type DetailsRoute = RouteProp<RootStackParamList, 'SessionDetails'>;
@@ -143,13 +143,19 @@ export default function SessionDetailsScreen() {
   });
   const [spotName, setSpotName] = useState(result.spot?.name ?? '');
   const [spotId, setSpotId] = useState<string | null>(result.spot?.id ?? null);
+  const [spotLat, setSpotLat] = useState<string>(result.spot?.lat?.toFixed(5) ?? '');
+  const [spotLng, setSpotLng] = useState<string>(result.spot?.lng?.toFixed(5) ?? '');
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const spotChanged = spotName !== (result.spot?.name ?? '') || spotId !== (result.spot?.id ?? null);
+  const spotCoordsChanged =
+    spotLat !== (result.spot?.lat?.toFixed(5) ?? '') ||
+    spotLng !== (result.spot?.lng?.toFixed(5) ?? '');
   const hasChanges =
     spotChanged ||
+    spotCoordsChanged ||
     fields.notes !== (result.session.notes ?? '') ||
     fields.overall_rating !== (result.session.overall_rating !== null
       ? String(result.session.overall_rating)
@@ -192,13 +198,28 @@ export default function SessionDetailsScreen() {
         overall_rating: rating,
       };
 
+      let resolvedSpotId = spotId;
+
       if (spotChanged) {
-        let resolvedSpotId = spotId;
         if (resolvedSpotId === null && spotName.trim()) {
-          const created = await createSpot(spotName.trim());
+          const created = await createSpot(spotName.trim(), result.session.lat, result.session.lng);
           resolvedSpotId = created.id;
+          setSpotId(created.id);
+          setSpotLat(created.lat?.toFixed(5) ?? '');
+          setSpotLng(created.lng?.toFixed(5) ?? '');
         }
         if (resolvedSpotId) updates.spot_id = resolvedSpotId;
+      }
+
+      if (spotCoordsChanged && resolvedSpotId) {
+        const parsedLat = spotLat.trim() !== '' ? parseFloat(spotLat) : null;
+        const parsedLng = spotLng.trim() !== '' ? parseFloat(spotLng) : null;
+        if ((parsedLat !== null && isNaN(parsedLat)) || (parsedLng !== null && isNaN(parsedLng))) {
+          setError('Coordinates must be valid numbers');
+          setIsSaving(false);
+          return;
+        }
+        await patchSpot(resolvedSpotId, parsedLat, parsedLng);
       }
 
       await patchSession(result.session.id, updates);
@@ -217,10 +238,26 @@ export default function SessionDetailsScreen() {
       </TouchableOpacity>
       <SpotAutocomplete value={spotName} spotId={spotId} onChange={handleSpotChange} />
       <Text style={styles.date}>{formatDate(result.session.date)}</Text>
-      {result.session.lat !== null && result.session.lng !== null && (
-        <Text style={styles.coords}>
-          {result.session.lat?.toFixed(5)}, {result.session.lng?.toFixed(5)}
-        </Text>
+      {spotId !== null && (
+        <View style={styles.coordsRow}>
+          <TextInput
+            style={styles.coordInput}
+            value={spotLat}
+            onChangeText={setSpotLat}
+            placeholder="Latitude"
+            keyboardType="decimal-pad"
+            autoCorrect={false}
+          />
+          <Text style={styles.coordSep}>,</Text>
+          <TextInput
+            style={styles.coordInput}
+            value={spotLng}
+            onChangeText={setSpotLng}
+            placeholder="Longitude"
+            keyboardType="decimal-pad"
+            autoCorrect={false}
+          />
+        </View>
       )}
 
       <Text style={styles.sectionTitle}>Notes</Text>
@@ -280,7 +317,9 @@ const styles = StyleSheet.create({
   backButton: { alignSelf: 'flex-start', marginBottom: 16 },
   backButtonText: { fontSize: 16, color: '#0055ff', fontWeight: '500' },
   date: { fontSize: 14, color: '#666', marginBottom: 4, marginTop: 4 },
-  coords: { fontSize: 12, color: '#999', marginBottom: 20, fontVariant: ['tabular-nums'] },
+  coordsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, gap: 4 },
+  coordInput: { fontSize: 12, color: '#999', fontVariant: ['tabular-nums'], flex: 1, paddingVertical: 2 },
+  coordSep: { fontSize: 12, color: '#999' },
   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8, marginTop: 16 },
   autocompleteWrapper: { zIndex: 10 },
   spotInputRow: {

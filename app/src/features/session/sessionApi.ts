@@ -83,15 +83,27 @@ export async function getSpots(): Promise<SessionSpot[]> {
   return json.data as SessionSpot[];
 }
 
-export async function createSpot(name: string): Promise<SessionSpot> {
+export async function createSpot(name: string, lat?: number | null, lng?: number | null): Promise<SessionSpot> {
   const authHeader = await getAuthHeader();
   const response = await fetch(`${API_URL}/api/spots/`, {
     method: 'POST',
     headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, lat: lat ?? null, lng: lng ?? null }),
   });
   const json = await parseJsonResponse(response);
   if (!response.ok || json.error) throw new Error(json.error ?? 'Failed to create spot');
+  return json.data as SessionSpot;
+}
+
+export async function patchSpot(spotId: string, lat: number | null, lng: number | null): Promise<SessionSpot> {
+  const authHeader = await getAuthHeader();
+  const response = await fetch(`${API_URL}/api/spots/${spotId}`, {
+    method: 'PATCH',
+    headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lat, lng }),
+  });
+  const json = await parseJsonResponse(response);
+  if (!response.ok || json.error) throw new Error(json.error ?? 'Failed to update spot');
   return json.data as SessionSpot;
 }
 
