@@ -37,14 +37,13 @@ function formatDuration(ms: number): string {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-function RatingDots({ rating }: { rating: number | null }) {
+function RatingStars({ rating }: { rating: number | null }) {
   return (
-    <View style={styles.dots}>
+    <View style={styles.starsRow}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <View
-          key={i}
-          style={[styles.dot, rating !== null && i <= rating ? styles.dotFilled : styles.dotEmpty]}
-        />
+        <Text key={i} style={[styles.star, rating !== null && i <= rating ? styles.starFilled : null]}>
+          ★
+        </Text>
       ))}
     </View>
   );
@@ -65,7 +64,7 @@ function SessionCard({ item, onPress }: SessionCardProps) {
         <Text style={styles.cardDate}>{formatDate(item.date)}</Text>
         <Text style={styles.cardSpot}>{item.spot?.name ?? 'Spot inconnu'}</Text>
       </View>
-      <RatingDots rating={item.overall_rating} />
+      <RatingStars rating={item.overall_rating} />
     </Pressable>
   );
 }
@@ -476,20 +475,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1a1a1a',
   },
-  dots: {
+  starsRow: {
     flexDirection: 'row',
     gap: 4,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  star: {
+    fontSize: 16,
+    color: '#ccc',
   },
-  dotFilled: {
-    backgroundColor: '#0099cc',
-  },
-  dotEmpty: {
-    backgroundColor: '#ddd',
+  starFilled: {
+    color: '#f5a623',
   },
   emptyText: {
     fontSize: 15,
