@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useAudioRecorder, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
 import { Audio, AVPlaybackStatus } from 'expo-av';
+import * as Location from 'expo-location';
 import Slider from '@react-native-community/slider';
 import * as FileSystem from 'expo-file-system';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -37,6 +38,7 @@ export default function RecorderScreen() {
     uri: null,
     durationMs: 0,
   });
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [sound, setSound] = useState<Audio.Sound | null>(null);
@@ -81,6 +83,19 @@ export default function RecorderScreen() {
         setError('Microphone permission is required to record a session.');
         return;
       }
+
+      const { status: locStatus } = await Location.requestForegroundPermissionsAsync();
+      if (locStatus === 'granted') {
+        try {
+          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        } catch {
+          setLocation(null);
+        }
+      } else {
+        setLocation(null);
+      }
+
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await audioRecorder.prepareToRecordAsync();
       await audioRecorder.record();
@@ -202,7 +217,7 @@ export default function RecorderScreen() {
     setPhase('uploading');
     setError(null);
     try {
-      const result = await uploadSession(recordingState.uri);
+      const result = await uploadSession(recordingState.uri, location?.lat, location?.lng);
       navigation.navigate('SessionConfirm', { result });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');

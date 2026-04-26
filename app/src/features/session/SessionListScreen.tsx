@@ -14,6 +14,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import { useAudioRecorder, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
 import * as FileSystem from 'expo-file-system';
+import * as Location from 'expo-location';
 import Slider from '@react-native-community/slider';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { getSessions } from './sessionApi';
@@ -69,6 +70,7 @@ export default function SessionListScreen({ navigation }: Props) {
   const [recordingUri, setRecordingUri] = useState<string | null>(null);
   const [durationMs, setDurationMs] = useState(0);
   const [recordError, setRecordError] = useState<string | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -85,6 +87,10 @@ export default function SessionListScreen({ navigation }: Props) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const barWidthAnim = useRef(new Animated.Value(0)).current;
   const pulseRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  useEffect(() => {
+    Location.requestForegroundPermissionsAsync();
+  }, []);
 
   useEffect(() => {
     getSessions()
@@ -151,6 +157,17 @@ export default function SessionListScreen({ navigation }: Props) {
       if (!granted) {
         setRecordError('Microphone permission required.');
         return;
+      }
+      const { status: locStatus } = await Location.requestForegroundPermissionsAsync();
+      if (locStatus === 'granted') {
+        try {
+          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        } catch {
+          setLocation(null);
+        }
+      } else {
+        setLocation(null);
       }
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await audioRecorder.prepareToRecordAsync();
@@ -270,7 +287,7 @@ export default function SessionListScreen({ navigation }: Props) {
     setPhase('uploading');
     setRecordError(null);
     try {
-      const result = await uploadSession(recordingUri);
+      const result = await uploadSession(recordingUri, location?.lat, location?.lng);
       navigation.navigate('SessionConfirm', { result });
     } catch (err) {
       setRecordError(err instanceof Error ? err.message : 'Upload failed');

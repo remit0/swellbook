@@ -13,4 +13,6 @@ class Session(BaseModel):
     transcript_raw: str | None
     notes: str | None
     overall_rating: int | None  # 1-5
+    lat: float | None
+    lng: float | None
     created_at: datetime

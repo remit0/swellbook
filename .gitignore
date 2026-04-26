@@ -27,6 +27,8 @@ expo-env.d.ts
 *.mobileprovision
 /ios
 /android
+app/ios/
+app/android/
 
 # Debug
 npm-debug.*

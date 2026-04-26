@@ -78,6 +78,8 @@ async def _resolve_spot(
         closest_dist = float("inf")
 
         for spot in all_spots.data:
+            if spot.get("lat") is None or spot.get("lng") is None:
+                continue
             dist = _haversine_km(user_lat, user_lng, spot["lat"], spot["lng"])
             if dist < closest_dist:
                 closest_dist = dist
@@ -192,6 +194,8 @@ async def create_session(
         "transcript_raw": transcript,
         "notes": extracted.get("notes"),
         "overall_rating": extracted.get("overall_rating"),
+        "lat": user_lat,
+        "lng": user_lng,
     }
 
     try:

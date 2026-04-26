@@ -1,2 +1,2 @@
 cd app
-npx expo start
+npx expo run:ios

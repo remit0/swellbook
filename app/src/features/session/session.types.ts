@@ -24,6 +24,8 @@ export interface SessionRecord {
   transcript_raw: string | null;
   notes: string | null;
   overall_rating: number | null;
+  lat: number | null;
+  lng: number | null;
   created_at: string;
 }
 

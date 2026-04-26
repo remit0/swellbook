@@ -206,6 +206,11 @@ export default function SessionConfirmScreen() {
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <SpotAutocomplete value={spotName} spotId={spotId} onChange={handleSpotChange} />
       <Text style={styles.date}>{formatDate(result.session.date)}</Text>
+      {result.session.lat !== null && result.session.lng !== null && (
+        <Text style={styles.coords}>
+          {result.session.lat?.toFixed(5)}, {result.session.lng?.toFixed(5)}
+        </Text>
+      )}
 
       <Text style={styles.sectionTitle}>Notes</Text>
       <TextInput
@@ -251,7 +256,8 @@ export default function SessionConfirmScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 24, paddingTop: 64, paddingBottom: 48 },
-  date: { fontSize: 14, color: '#666', marginBottom: 24, marginTop: 4 },
+  date: { fontSize: 14, color: '#666', marginBottom: 4, marginTop: 4 },
+  coords: { fontSize: 12, color: '#999', marginBottom: 20, fontVariant: ['tabular-nums'] },
   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8, marginTop: 16 },
   autocompleteWrapper: { zIndex: 10 },
   spotInputRow: {
