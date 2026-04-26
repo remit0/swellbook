@@ -259,30 +259,37 @@ export default function SessionDetailsScreen() {
         <Text style={styles.backButtonText}>← Sessions</Text>
       </TouchableOpacity>
       <SpotAutocomplete value={spotName} spotId={spotId} onChange={handleSpotChange} />
-      <Text style={styles.date}>{formatDate(result.session.date)}</Text>
-      {spotId !== null && (
-        <View style={styles.coordsRow}>
-          <Text style={styles.coordLabel}>Lat</Text>
-          <TextInput
-            style={styles.coordInput}
-            value={spotLat}
-            onChangeText={setSpotLat}
-            placeholder="—"
-            keyboardType="decimal-pad"
-            autoCorrect={false}
-          />
-          <Text style={styles.coordSep}>·</Text>
-          <Text style={styles.coordLabel}>Lng</Text>
-          <TextInput
-            style={styles.coordInput}
-            value={spotLng}
-            onChangeText={setSpotLng}
-            placeholder="—"
-            keyboardType="decimal-pad"
-            autoCorrect={false}
-          />
-        </View>
-      )}
+      <View style={styles.dateRow}>
+        <Text style={styles.date}>{formatDate(result.session.date)}</Text>
+        {spotId !== null && (
+          <>
+            <Text style={styles.coordSep}> · </Text>
+            <TextInput
+              style={styles.coordInput}
+              value={spotLat}
+              onChangeText={setSpotLat}
+              placeholder="—"
+              keyboardType="decimal-pad"
+              autoCorrect={false}
+            />
+            {spotLat.trim() !== '' && !isNaN(parseFloat(spotLat)) && (
+              <Text style={styles.coordDir}>{parseFloat(spotLat) >= 0 ? 'N' : 'S'}</Text>
+            )}
+            <Text style={styles.coordSep}> · </Text>
+            <TextInput
+              style={styles.coordInput}
+              value={spotLng}
+              onChangeText={setSpotLng}
+              placeholder="—"
+              keyboardType="decimal-pad"
+              autoCorrect={false}
+            />
+            {spotLng.trim() !== '' && !isNaN(parseFloat(spotLng)) && (
+              <Text style={styles.coordDir}>{parseFloat(spotLng) >= 0 ? 'E' : 'W'}</Text>
+            )}
+          </>
+        )}
+      </View>
 
       {result.forecast && <ForecastCard forecast={result.forecast} />}
 
@@ -342,11 +349,11 @@ const styles = StyleSheet.create({
   container: { padding: 24, paddingTop: 64, paddingBottom: 48 },
   backButton: { alignSelf: 'flex-start', marginBottom: 16 },
   backButtonText: { fontSize: 16, color: '#0055ff', fontWeight: '500' },
-  date: { fontSize: 14, color: '#666', marginBottom: 4, marginTop: 4 },
-  coordsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 6 },
-  coordLabel: { fontSize: 11, color: '#aaa', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-  coordInput: { fontSize: 12, color: '#888', fontVariant: ['tabular-nums'], flex: 1, paddingVertical: 2 },
-  coordSep: { fontSize: 12, color: '#ccc', marginHorizontal: 2 },
+  dateRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginBottom: 8, marginTop: 4 },
+  date: { fontSize: 14, color: '#666' },
+  coordInput: { fontSize: 12, color: '#888', fontVariant: ['tabular-nums'], width: 68, paddingVertical: 2 },
+  coordSep: { fontSize: 12, color: '#ccc' },
+  coordDir: { fontSize: 11, color: '#aaa', fontWeight: '600' },
   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8, marginTop: 16 },
   autocompleteWrapper: { zIndex: 10 },
   spotInputRow: {
