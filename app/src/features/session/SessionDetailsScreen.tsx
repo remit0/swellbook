@@ -43,21 +43,22 @@ function msToKmh(ms: number | null): number | null {
   return ms !== null ? Math.round(ms * 3.6 * 10) / 10 : null;
 }
 
-interface ForecastRowProps {
+interface ForecastStatProps {
+  icon: string;
   label: string;
   value: string | number | null;
   unit?: string;
-  isLast?: boolean;
 }
 
-function ForecastRow({ label, value, unit = '', isLast }: ForecastRowProps) {
+function ForecastStat({ icon, label, value, unit = '' }: ForecastStatProps) {
   const display = value !== null
     ? (unit ? `${value} ${unit}` : `${value}`)
     : '—';
   return (
-    <View style={[styles.forecastRow, isLast && styles.forecastRowLast]}>
-      <Text style={styles.forecastLabel}>{label}</Text>
-      <Text style={styles.forecastValue}>{display}</Text>
+    <View style={styles.forecastStat}>
+      <Text style={styles.forecastStatIcon}>{icon}</Text>
+      <Text style={styles.forecastStatValue}>{display}</Text>
+      <Text style={styles.forecastStatLabel}>{label}</Text>
     </View>
   );
 }
@@ -72,10 +73,12 @@ function ForecastCard({ forecast }: { forecast: SessionForecast }) {
     <>
       <Text style={styles.sectionTitle}>Forecast</Text>
       <View style={styles.forecastCard}>
-        <ForecastRow label="Wave height" value={forecast.wave_height} unit="m" />
-        <ForecastRow label="Wind speed" value={windKmh} unit="km/h" />
-        <ForecastRow label="Swell direction" value={swellCompass} />
-        <ForecastRow label="Swell period" value={forecast.swell_period} unit="s" isLast />
+        <View style={styles.forecastGrid}>
+          <ForecastStat icon="🌊" label="Wave height" value={forecast.wave_height} unit="m" />
+          <ForecastStat icon="💨" label="Wind speed" value={windKmh} unit="km/h" />
+          <ForecastStat icon="🧭" label="Swell dir." value={swellCompass} />
+          <ForecastStat icon="⏱" label="Period" value={forecast.swell_period} unit="s" />
+        </View>
       </View>
     </>
   );
@@ -309,25 +312,27 @@ export default function SessionDetailsScreen() {
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <TouchableOpacity
-        style={[styles.saveButton, (!hasChanges || isSaving) && styles.saveButtonDisabled]}
-        onPress={handleSaveChanges}
-        disabled={!hasChanges || isSaving}
-      >
-        {isSaving
-          ? <ActivityIndicator color="#fff" />
-          : <Text style={styles.saveButtonText}>Save Changes</Text>}
-      </TouchableOpacity>
+      <View style={styles.actionsRow}>
+        <TouchableOpacity
+          style={[styles.saveButton, (!hasChanges || isSaving) && styles.saveButtonDisabled]}
+          onPress={handleSaveChanges}
+          disabled={!hasChanges || isSaving}
+        >
+          {isSaving
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={styles.saveButtonText}>Save Changes</Text>}
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.deleteButton, isDeleting && styles.deleteButtonDisabled]}
-        onPress={handleDeleteSession}
-        disabled={isDeleting}
-      >
-        {isDeleting
-          ? <ActivityIndicator color="#fff" />
-          : <Text style={styles.deleteButtonText}>Delete Session</Text>}
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.deleteButton, isDeleting && styles.deleteButtonDisabled]}
+          onPress={handleDeleteSession}
+          disabled={isDeleting}
+        >
+          {isDeleting
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={styles.deleteButtonText}>Delete</Text>}
+        </TouchableOpacity>
+      </View>
 
     </ScrollView>
   );
@@ -338,7 +343,7 @@ const styles = StyleSheet.create({
   backButton: { alignSelf: 'flex-start', marginBottom: 16 },
   backButtonText: { fontSize: 16, color: '#0055ff', fontWeight: '500' },
   date: { fontSize: 14, color: '#666', marginBottom: 4, marginTop: 4 },
-  coordsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, gap: 6 },
+  coordsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 6 },
   coordLabel: { fontSize: 11, color: '#aaa', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
   coordInput: { fontSize: 12, color: '#888', fontVariant: ['tabular-nums'], flex: 1, paddingVertical: 2 },
   coordSep: { fontSize: 12, color: '#ccc', marginHorizontal: 2 },
@@ -400,42 +405,69 @@ const styles = StyleSheet.create({
   star: { fontSize: 32, color: '#ccc' },
   starFilled: { color: '#f5a623' },
   forecastCard: {
-    backgroundColor: '#eef4ff',
-    borderRadius: 14,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
     padding: 16,
     marginTop: 0,
     marginBottom: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  forecastRow: {
+  forecastGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#c8d8f0',
+    flexWrap: 'wrap',
+    gap: 12,
   },
-  forecastRowLast: {
-    borderBottomWidth: 0,
-    paddingBottom: 0,
+  forecastStat: {
+    flex: 1,
+    minWidth: '40%',
+    backgroundColor: '#f7f7f7',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    alignItems: 'flex-start',
   },
-  forecastLabel: { fontSize: 15, color: '#555' },
-  forecastValue: { fontSize: 15, fontWeight: '600', color: '#1a1a1a' },
+  forecastStatIcon: {
+    fontSize: 20,
+    marginBottom: 6,
+  },
+  forecastStatValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginBottom: 2,
+  },
+  forecastStatLabel: {
+    fontSize: 11,
+    color: '#999',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
   error: { color: '#cc0000', marginTop: 16 },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 24,
+  },
   saveButton: {
+    flex: 3,
     backgroundColor: '#0055ff',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 24,
   },
   saveButtonDisabled: { backgroundColor: '#99c2e8' },
   saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   deleteButton: {
+    flex: 1,
     backgroundColor: '#cc2200',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 12,
   },
   deleteButtonDisabled: { backgroundColor: '#e08070' },
   deleteButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
