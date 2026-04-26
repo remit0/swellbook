@@ -216,6 +216,9 @@ export default function SessionDetailsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>← Sessions</Text>
+      </TouchableOpacity>
       <SpotAutocomplete value={spotName} spotId={spotId} onChange={handleSpotChange} />
       <Text style={styles.date}>{formatDate(result.session.date)}</Text>
       {result.session.lat !== null && result.session.lng !== null && (
@@ -278,6 +281,8 @@ export default function SessionDetailsScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 24, paddingTop: 64, paddingBottom: 48 },
+  backButton: { alignSelf: 'flex-start', marginBottom: 16 },
+  backButtonText: { fontSize: 16, color: '#0055ff', fontWeight: '500' },
   date: { fontSize: 14, color: '#666', marginBottom: 4, marginTop: 4 },
   coords: { fontSize: 12, color: '#999', marginBottom: 20, fontVariant: ['tabular-nums'] },
   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8, marginTop: 16 },
