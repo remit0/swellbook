@@ -4,6 +4,9 @@ A personal surf session journal that learns how you experience the ocean.
 
 Record voice memos after each session, and SwellBook extracts conditions, matches them against real forecast data, and builds your personal surf knowledge base over time. When you're wondering whether to paddle out, it cross-references current conditions with your history and tells you what to expect.
 
+
+<img src="docs/swellbook.png" width="220" alt="SwellBook" />
+
 ---
 
 ## How it works
